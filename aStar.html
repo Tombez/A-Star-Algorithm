@@ -65,9 +65,7 @@
 					mouse.x = x;
 					mouse.y = y;
 					if (mouse.down == 1) {
-						if (euclideanDist(mouse, goal) > 5 && euclideanDist(mouse, start) > 5) {
-							tiles[x][y].blocked = true;
-						}
+						tiles[x][y].blocked = true;
 					} else if (mouse.down == 3) {
 						tiles[x][y].blocked = false;
 					}
@@ -149,11 +147,12 @@
 			//var startTime = (new Date()).getTime();
 			// Initialise variables:
 			initTiles();
+			tiles[start.x][start.y].g = 0;
+			open = [{x: start.x, y: start.y}];
 			current = {x: start.x, y: start.y};
-			tiles[current.x][current.y].g = 0;
-			open = [{x: current.x, y: current.y}];
 			// While there still is hope for a solution, and we haven't reached it yet:
 			while(open.length > 0 && !(current.x == goal.x && current.y == goal.y)) {
+					
 				// Loop through a 3x3 box with a minimum index of -1, and a maximum index of 1:
 				for (var j = -1; j <= 1; j++) {
 					for (var i = -1; i <= 1; i++) {
@@ -191,26 +190,30 @@
 				open.splice(open.indexOfPointObj(current), 1);
 				// Mark current node as 'closed', (already calculated):
 				tiles[current.x][current.y].closed = true;
-				// If the open set's length is greater than 0:
-				if (open.length > 0) {
-					// Set the record for the lowest f-cost to be positive infinity:
-					var least = Number.POSITIVE_INFINITY;
-					// Set the positon of the node with the lowest f-cost to not exist:
-					var index = null;
-					// Loop through all nodes in the open set:
-					for (var n = 0; n < open.length; n++) {
-						// If this node's f-cost if less than the record lowest:
-						if (tiles[open[n].x][open[n].y].f < least) {
-							// Update the record to be 'accurate':
-							least = tiles[open[n].x][open[n].y].f;
-							// Save the position of this node for later:
-							index = n;
-						}
+				if (open.length == 0) {
+					if (current.x != goal.x || current.y != goal.y) {
+						noSolution = true;
+					} else {
+						noSolution = false;
 					}
-					// Set current to the node in the open set with the lowest f-cost:
-					current = {x: open[index].x, y: open[index].y};
+					return;
 				}
-				// Back to top:
+				
+				// Set the record for the lowest f-cost to be positive infinity:
+				var least = Number.POSITIVE_INFINITY;
+				var index = null;
+				// Loop through all nodes in the open set:
+				for (var n = 0; n < open.length; n++) {
+					// If this node's f-cost if less than the record lowest:
+					if (tiles[open[n].x][open[n].y].f < least) {
+						// Update the record to be 'accurate':
+						least = tiles[open[n].x][open[n].y].f;
+						// Save the position of this node for later:
+						index = n;
+					}
+				}
+				// Set current to the node in the open set with the lowest f-cost:
+				current = {x: open[index].x, y: open[index].y};
 			}
 			if (current.x != goal.x || current.y != goal.y) {
 				noSolution = true;
