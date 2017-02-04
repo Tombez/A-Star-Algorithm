@@ -9,6 +9,8 @@
 	<style>
 	body {
 		margin: 0px;
+		overflow: hidden;
+		background: black;
 	}
 	</style>
 	
@@ -22,14 +24,14 @@
 		// User variables:
 		var cols = 50;
 		var rows = 50;
-		var tileSize = 18;
+		var tileSize = ~~(Math.min(window.innerWidth, window.innerHeight) / Math.max(cols, rows));
 		var sps = 10;
 		var start = {x: 15, y: 15};
 		var goal = {x: cols - 1, y: rows - 1};
 		
 		// Global variables:
-		var canvas;
-		var ctx;
+		var canvas = document.getElementById("canvas");
+		var ctx = canvas.getContext("2d");
 		var loop;
 		var tiles;
 		var open;
@@ -43,40 +45,44 @@
 		var mouse = {down: false, x: 0, y: 0};
 		var rootTwo = 1.4142135623730951;
 		
+		// Listeners:
+		window.addEventListener("resize", function() {
+			tileSize = ~~(Math.min(window.innerWidth, window.innerHeight) / Math.max(cols, rows));
+			initCanvas();
+			draw();
+		});
+		canvas.addEventListener("mousedown", function(event) {
+			mouse.down = event.which;
+			mouse.x = cols * tileSize * 2;
+			mousemove(event);
+		});
+		window.addEventListener("mouseup", function() {
+			mouse.down = false;
+		});
+		canvas.addEventListener("mousemove", mousemove = function(event) {
+			var x = ~~(event.clientX / tileSize);
+			var y = ~~(event.clientY / tileSize);
+			if (mouse.x != x || mouse.y != y) {
+				mouse.x = x;
+				mouse.y = y;
+				if (mouse.down == 1) {
+					tiles[x][y].blocked = true;
+				} else if (mouse.down == 3) {
+					tiles[x][y].blocked = false;
+				}
+				if (mouse.down) {
+					setTimeout(function() {
+						aStar();
+						draw();
+					}, 1);
+				}
+			}
+		});
+		
 		// Functions:
 		function initCanvas() {
-			canvas = document.getElementById("canvas");
 			canvas.width = cols * tileSize;
 			canvas.height = rows * tileSize;
-			ctx = canvas.getContext("2d");
-			
-			canvas.addEventListener("mousedown", function(event) {
-				mouse.down = event.which;
-				mouse.x = cols * tileSize * 2;
-				mousemove(event);
-			});
-			window.addEventListener("mouseup", function() {
-				mouse.down = false;
-			});
-			canvas.addEventListener("mousemove", mousemove = function(event) {
-				var x = ~~(event.clientX / tileSize);
-				var y = ~~(event.clientY / tileSize);
-				if (mouse.x != x || mouse.y != y) {
-					mouse.x = x;
-					mouse.y = y;
-					if (mouse.down == 1) {
-						tiles[x][y].blocked = true;
-					} else if (mouse.down == 3) {
-						tiles[x][y].blocked = false;
-					}
-					if (mouse.down) {
-						setTimeout(function() {
-							aStar();
-							draw();
-						}, 1);
-					}
-				}
-			});
 		}
 		function initTiles() {
 			if (!tiles) {
