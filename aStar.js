@@ -18,7 +18,7 @@ var mousemove;
 var noSolution;
 
 // Rainbow tables:
-var directions = [{x: 1, y: 0}, {x: 0, y: -1}, {x: -1, y: 0}, {x: 0, y: 1}]; // Right, up, left, down.
+var directions = [{x: 1, y: 0}, {x: 0, y: -1}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 1, y: -1}, {x: -1, y: -1}, {x: -1, y: 1}, {x: 1, y: 1}]; // Right, up, left, down, NE, NW, SW, SE.
 var mouse = {down: false, x: 0, y: 0};
 var rootTwo = 1.4142135623730951;
 
@@ -136,37 +136,35 @@ function aStar() { // Attempt 2.
 	// While there still is hope for a solution, and we haven't reached it yet:
 	while(open.length > 0 && !(current.x == goal.x && current.y == goal.y)) {
 			
-		// Loop through a 3x3 box with a minimum index of -1, and a maximum index of 1:
-		for (var j = -1; j <= 1; j++) {
-			for (var i = -1; i <= 1; i++) {
-				// Set the neighbor currently being evaluated:
-				var nei = {x: current.x + i, y: current.y + j}; // nei is short for neighbor.
-				// If nei is current, or if nei is outside the window bounds, or if nei is closed, or if nei has already been evaluated, or if nei is untraversable:
-				if ((nei.x == current.x && nei.y == current.y) || nei.x < 0 || nei.x > cols - 1 || nei.y < 0 || nei.y > rows - 1 || tiles[nei.x][nei.y].closed || tiles[nei.x][nei.y].blocked) {
-					// Skip this node and continue evaluating the rest:
-					continue;
-				}
-				// If neighbor never calculated it's heuristic:
-				if (tiles[nei.x][nei.y].h == undefined) {
-					// Calculate and set the neighbor's heuristic:
-					tiles[nei.x][nei.y].h = heuristic(nei);
-				}
-				// Calculate the distance to this neighbor from the start, following the path that is currently being evaluated:
-				var tentativeG = tiles[current.x][current.y].g + euclideanDist(current, nei);
-				// If neighbor never got a g-cost, or this path to the neighbor is shorter than what was previously set:
-				if (tiles[nei.x][nei.y].g == undefined || tentativeG < tiles[nei.x][nei.y].g) {
-					// Set the g-cost to this newly calculated g-cost.
-					tiles[nei.x][nei.y].g = tentativeG;
-					// Set the neighbor's parent to the current node:
-					tiles[nei.x][nei.y].parent = current;
-				}
-				// Evaluate and set this neighbor's f-cost:
-				tiles[nei.x][nei.y].f = tiles[nei.x][nei.y].g + tiles[nei.x][nei.y].h;
-				// If this neighbor isn't in the open set:
-				if (open.indexOfPointObj(nei) == - 1) {
-					// Add it to the open set:
-					open.push(nei);
-				}
+		// Loop through each direction:
+		for (var n = 0; n < directions.length; n++) {
+			// Set the neighbor currently being evaluated:
+			var nei = {x: current.x + directions[n].x, y: current.y + directions[n].y}; // nei is short for neighbor.
+			// If nei is current, or if nei is outside the window bounds, or if nei is closed, or if nei has already been evaluated, or if nei is untraversable:
+			if ((nei.x == current.x && nei.y == current.y) || nei.x < 0 || nei.x > cols - 1 || nei.y < 0 || nei.y > rows - 1 || tiles[nei.x][nei.y].closed || tiles[nei.x][nei.y].blocked) {
+				// Skip this node and continue evaluating the rest:
+				continue;
+			}
+			// If neighbor never calculated it's heuristic:
+			if (tiles[nei.x][nei.y].h == undefined) {
+				// Calculate and set the neighbor's heuristic:
+				tiles[nei.x][nei.y].h = heuristic(nei);
+			}
+			// Calculate the distance to this neighbor from the start, following the path that is currently being evaluated:
+			var tentativeG = tiles[current.x][current.y].g + euclideanDist(current, nei);
+			// If neighbor never got a g-cost, or this path to the neighbor is shorter than what was previously set:
+			if (tiles[nei.x][nei.y].g == undefined || tentativeG < tiles[nei.x][nei.y].g) {
+				// Set the g-cost to this newly calculated g-cost.
+				tiles[nei.x][nei.y].g = tentativeG;
+				// Set the neighbor's parent to the current node:
+				tiles[nei.x][nei.y].parent = current;
+			}
+			// Evaluate and set this neighbor's f-cost:
+			tiles[nei.x][nei.y].f = tiles[nei.x][nei.y].g + tiles[nei.x][nei.y].h;
+			// If this neighbor isn't in the open set:
+			if (open.indexOfPointObj(nei) == - 1) {
+				// Add it to the open set:
+				open.push(nei);
 			}
 		}
 		// Remove current from the open set:
