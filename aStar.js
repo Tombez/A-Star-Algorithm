@@ -16,6 +16,7 @@ var current;
 var path;
 var mousemove;
 var noSolution;
+var blocks = [];
 
 // Rainbow tables:
 var directions = [{x: 1, y: 0}, {x: 0, y: -1}, {x: -1, y: 0}, {x: 0, y: 1}, {x: 1, y: -1}, {x: -1, y: -1}, {x: -1, y: 1}, {x: 1, y: 1}]; // Right, up, left, down, NE, NW, SW, SE.
@@ -42,16 +43,14 @@ canvas.addEventListener("mousemove", mousemove = function(event) {
 	if (mouse.x != x || mouse.y != y) {
 		mouse.x = x;
 		mouse.y = y;
-		if (mouse.down == 1) {
-			tiles[x][y].blocked = true;
-		} else if (mouse.down == 3) {
-			tiles[x][y].blocked = false;
-		}
-		if (mouse.down) {
-			setTimeout(function() {
-				aStar();
-				draw();
-			}, 1);
+		if (mouse.down && mouse.down != 2) { // middle click.
+			if (mouse.down == 1) { // left click.
+				blocks.push({x: x, y: y});
+			} else if (mouse.down == 3) { // right click.
+				blocks.splice(blocks.indexOfPointObj(mouse), 1);
+			}
+			aStar();
+			draw();
 		}
 	}
 });
@@ -62,35 +61,32 @@ function initCanvas() {
 	canvas.height = rows * tileSize;
 }
 function initTiles() {
-	if (!tiles) {
-		tiles = [];
-		for (var x = 0; x < cols; x++) {
-			tiles[x] = [];
-			for (var y = 0; y < rows; y++) {
-				tiles[x][y] = {};
-			}
+	tiles = new Array(cols);
+	for (var x = 0; x < cols; x++) {
+		tiles[x] = new Array(rows);
+		for (var y = 0; y < rows; y++) {
+			tiles[x][y] = {};
 		}
-	} else {
-		var newTiles = [];
-		for (var x = 0; x < cols; x++) {
-			newTiles[x] = [];
-			for (var y = 0; y < rows; y++) {
-				newTiles[x][y] = {};
-				if (tiles[x][y].blocked) {
-					newTiles[x][y].blocked = true;
-				}
-			}
-		}
-		tiles = newTiles;
 	}
-	Array.prototype.indexOfPointObj = function(point) {
-		for (var n = 0; n < this.length; n++) {
-			if (this[n].x == point.x && this[n].y == point.y) {
-				return n;
-			}
+	updBlocks();
+}
+Array.prototype.indexOfPointObj = function(point) {
+	for (var n = 0; n < this.length; n++) {
+		if (this[n].x == point.x && this[n].y == point.y) {
+			return n;
 		}
-		return -1;
-	};
+	}
+	return -1;
+};
+function updBlocks() {
+	for (var y = 0; y < rows; y++) {
+		for (var x = 0; x < cols; x++) {
+			tiles[x][y].blocked = false;
+		}
+	}
+	for (var n = 0; n < blocks.length; n++) {
+		tiles[blocks[n].x][blocks[n].y].blocked = true;
+	}
 }
 function cityDist(pointA, pointB) {
 	return Math.abs(pointA.x - pointB.x) + Math.abs(pointA.y - pointB.y);
@@ -204,11 +200,11 @@ function aStar() { // Attempt 2.
 	//console.log("milliseconds from start to finish: ", (new Date()).getTime() - startTime);
 }
 function draw() {
-	ctx.fillStyle = "black"; // Draw background.
+	ctx.fillStyle = "#888888"; // Draw background.
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
 	ctx.beginPath(); // Draw closed.
-	ctx.fillStyle = "darkpink";
+	ctx.fillStyle = "#0074D9";
 	for (var y = 0; y < rows; y++) {
 		for (var x = 0; x < cols; x++) {
 			if (tiles[x][y].closed) {
@@ -219,7 +215,7 @@ function draw() {
 	ctx.fill();
 	
 	ctx.beginPath(); // Draw open.
-	ctx.fillStyle = "blue";
+	ctx.fillStyle = "#011b72";
 	for (var n = 0; n < open.length; n++) {
 		ctx.rect(open[n].x * tileSize, open[n].y * tileSize, tileSize, tileSize);
 	}
@@ -235,7 +231,7 @@ function draw() {
 	}
 	if (path != undefined) {
 		ctx.beginPath(); // Draw path.
-		ctx.fillStyle = "lime";
+		ctx.fillStyle = "#ca0a25";
 		for (var n = 0; n < path.length; n++) {
 			ctx.rect(path[n].x * tileSize, path[n].y * tileSize, tileSize, tileSize);
 		}
@@ -249,7 +245,7 @@ function draw() {
 	ctx.fill();
 	
 	ctx.beginPath(); // Draw blocked.
-	ctx.fillStyle = "grey";
+	ctx.fillStyle = "black";
 	for (var y = 0; y < rows; y++) {
 		for (var x = 0; x < cols; x++) {
 			if (tiles[x][y].blocked) {
@@ -260,7 +256,7 @@ function draw() {
 	ctx.fill();
 	
 	ctx.beginPath(); // Draw grid.
-	ctx.strokeStyle = "white";
+	ctx.strokeStyle = "black";
 	for (var x = 0; x <= cols; x++) {
 		ctx.moveTo(x * tileSize, 0);
 		ctx.lineTo(x * tileSize, canvas.height);
