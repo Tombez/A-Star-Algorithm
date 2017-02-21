@@ -118,6 +118,8 @@ function euclideanDist(pointA, pointB) {
 		}
 	}
 }
+// Thank you http://www.color-hex.com/color-palette/32640 for the colors!
+
 function heuristic(point) {
 	//return euclideanDist(point, goal);
 	return diagonalCityDist(point, goal);
